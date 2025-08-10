@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App - Stay Organized</title>
+    <meta name="description" content="A beautiful and intuitive todo app to help you stay organized and productive">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --background: hsl(240, 20%, 99%);
+            --foreground: hsl(240, 10%, 8%);
+            --card: hsl(0, 0%, 100%);
+            --card-foreground: hsl(240, 10%, 15%);
+            --primary: hsl(262, 80%, 65%);
+            --primary-foreground: hsl(0, 0%, 100%);
+            --secondary: hsl(240, 6%, 96%);
+            --secondary-foreground: hsl(240, 10%, 20%);
+            --muted: hsl(240, 6%, 96%);
+            --muted-foreground: hsl(240, 5%, 45%);
+            --accent: hsl(262, 40%, 92%);
+            --accent-foreground: hsl(262, 80%, 40%);
+            --success: hsl(142, 70%, 50%);
+            --success-foreground: hsl(0, 0%, 100%);
+            --destructive: hsl(0, 80%, 60%);
+            --destructive-foreground: hsl(0, 0%, 100%);
+            --border: hsl(240, 10%, 92%);
+            --input: hsl(240, 10%, 96%);
+            --ring: hsl(262, 80%, 65%);
+            --radius: 0.75rem;
+            --todo-card-hover: hsl(240, 20%, 98%);
+            --todo-completed: hsl(240, 6%, 96%);
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, hsl(262, 100%, 98%) 0%, hsl(240, 100%, 98%) 100%);
+            min-height: 100vh;
+            color: var(--foreground);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent-foreground));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--muted-foreground);
+            font-size: 1.1rem;
+        }
+
+        .progress-text {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--muted-foreground);
+        }
+
+        .add-todo-form {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .todo-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            transition: var(--transition-smooth);
+        }
+
+        .todo-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(262, 80%, 65%, 0.1);
+        }
+
+        .add-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-btn:hover {
+            background: hsl(262, 80%, 60%);
+            transform: scale(1.05);
+        }
+
+        .add-btn:active {
+            transform: scale(0.98);
+        }
+
+        .todos-container {
+            margin-bottom: 2rem;
+        }
+
+        .todo-item {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .todo-item:hover {
+            background: var(--todo-card-hover);
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .todo-item.completed {
+            background: var(--todo-completed);
+            opacity: 0.8;
+        }
+
+        .todo-checkbox {
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .todo-checkbox:hover {
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .todo-checkbox.completed {
+            background: var(--success);
+            border-color: var(--success);
+            color: var(--success-foreground);
+            animation: bounceIn 0.3s ease-out;
+        }
+
+        .todo-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .todo-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            transition: var(--transition-smooth);
+        }
+
+        .todo-text.completed {
+            text-decoration: line-through;
+            color: var(--muted-foreground);
+        }
+
+        .todo-date {
+            font-size: 0.8rem;
+            color: var(--muted-foreground);
+        }
+
+        .delete-btn {
+            width: 2rem;
+            height: 2rem;
+            border: none;
+            background: transparent;
+            color: var(--muted-foreground);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .todo-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--destructive);
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .empty-icon {
+            width: 4rem;
+            height: 4rem;
+            background: var(--muted);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: var(--muted-foreground);
+            font-size: 2rem;
+        }
+
+        .empty-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--muted-foreground);
+        }
+
+        .empty-description {
+            color: var(--muted-foreground);
+            opacity: 0.7;
+        }
+
+        .progress-bar-container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius);
+            padding: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--muted-foreground);
+        }
+
+        .progress-bar {
+            height: 0.5rem;
+            background: var(--muted);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 1rem;
+            transition: width 0.5s ease-out;
+            width: 0%;
+        }
+
+        .toast {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--card);
+            color: var(--card-foreground);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border);
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .add-btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Todo App</h1>
+            <p>Stay organized and productive</p>
+            <div class="progress-text" id="progressText" style="display: none;"></div>
+        </div>
+
+        <!-- Add Todo Form -->
+        <div class="add-todo-form">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    class="todo-input" 
+                    id="todoInput" 
+                    placeholder="Add a new task..."
+                    maxlength="200"
+                >
+                <button class="add-btn" id="addBtn">
+                    <span>+</span>
+                    Add
+                </button>
+            </div>
+        </div>
+
+        <!-- Todos Container -->
+        <div class="todos-container" id="todosContainer">
+            <!-- Empty state -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">+</div>
+                <div class="empty-title">No tasks yet</div>
+                <div class="empty-description">Add your first task above to get started</div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-container" id="progressContainer" style="display: none;">
+            <div class="progress-header">
+                <span>Progress</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        class TodoApp {
+            constructor() {
+                this.todos = JSON.parse(localStorage.getItem('todos')) || [];
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.render();
+            }
+
+            bindEvents() {
+                const todoInput = document.getElementById('todoInput');
+                const addBtn = document.getElementById('addBtn');
+
+                addBtn.addEventListener('click', () => this.addTodo());
+                todoInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTodo();
+                });
+            }
+
+            addTodo() {
+                const input = document.getElementById('todoInput');
+                const text = input.value.trim();
+
+                if (!text) return;
+
+                const todo = {
+                    id: Date.now().toString(),
+                    text,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.todos.unshift(todo);
+                this.saveTodos();
+                this.render();
+                input.value = '';
+                this.showToast('Task added successfully!');
+            }
+
+            toggleTodo(id) {
+                const todo = this.todos.find(t => t.id === id);
+                if (todo) {
+                    todo.completed = !todo.completed;
+                    this.saveTodos();
+                    this.render();
+                }
+            }
+
+            deleteTodo(id) {
+                this.todos = this.todos.filter(t => t.id !== id);
+                this.saveTodos();
+                this.render();
+                this.showToast('Task deleted');
+            }
+
+            saveTodos() {
+                localStorage.setItem('todos', JSON.stringify(this.todos));
+            }
+
+            formatDate(dateString) {
+                return new Date(dateString).toLocaleDateString();
+            }
+
+            updateProgress() {
+                const total = this.todos.length;
+                const completed = this.todos.filter(t => t.completed).length;
+                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                const progressText = document.getElementById('progressText');
+                const progressContainer = document.getElementById('progressContainer');
+                const progressPercent = document.getElementById('progressPercent');
+                const progressFill = document.getElementById('progressFill');
+
+                if (total > 0) {
+                    progressText.style.display = 'block';
+                    progressText.textContent = `${completed} of ${total} tasks completed`;
+                    progressContainer.style.display = 'block';
+                    progressPercent.textContent = `${percentage}%`;
+                    progressFill.style.width = `${percentage}%`;
+                } else {
+                    progressText.style.display = 'none';
+                    progressContainer.style.display = 'none';
+                }
+            }
+
+            render() {
+                const container = document.getElementById('todosContainer');
+                const emptyState = document.getElementById('emptyState');
+
+                if (this.todos.length === 0) {
+                    emptyState.style.display = 'block';
+                    container.innerHTML = '';
+                    container.appendChild(emptyState);
+                } else {
+                    emptyState.style.display = 'none';
+                    container.innerHTML = '';
+
+                    this.todos.forEach((todo, index) => {
+                        const todoElement = this.createTodoElement(todo, index);
+                        container.appendChild(todoElement);
+                    });
+                }
+
+                this.updateProgress();
+            }
+
+            createTodoElement(todo, index) {
+                const div = document.createElement('div');
+                div.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                div.style.animationDelay = `${index * 50}ms`;
+
+                div.innerHTML = `
+                    <div class="todo-checkbox ${todo.completed ? 'completed' : ''}" onclick="app.toggleTodo('${todo.id}')">
+                        ${todo.completed ? '✓' : ''}
+                    </div>
+                    <div class="todo-content">
+                        <div class="todo-text ${todo.completed ? 'completed' : ''}">${this.escapeHtml(todo.text)}</div>
+                        <div class="todo-date">${this.formatDate(todo.createdAt)}</div>
+                    </div>
+                    <button class="delete-btn" onclick="app.deleteTodo('${todo.id}')">
+                        🗑️
+                    </button>
+                `;
+
+                return div;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Initialize the app
+        const app = new TodoApp();
+    </script>
+</body>
+</html>
